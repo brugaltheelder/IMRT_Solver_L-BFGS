@@ -1,9 +1,16 @@
 __author__ = 'troy'
-
+try:
+    import mkl
+    have_mkl = True
+    print("Running with MKL Acceleration")
+except ImportError:
+    have_mkl = False
+    print("Running with normal backends")
 from scipy import io
 import scipy.sparse as sps
 import scipy.optimize as spo
 import numpy as np
+import time
 
 
 class imrt_data(object):
@@ -38,9 +45,13 @@ class imrt_model(object):
         self.x0 = np.zeros(self.data.nBeamlets)
 
     def solve(self):
-        self.fluence, self.obj, self.outDict = spo.fmin_l_bfgs_b(self.calcObjGrad, x0=self.x0.copy(),
-                                                                 bounds=[(0, None) for i in
-                                                                         xrange(self.data.nBeamlets)], disp=5)
+        #self.fluence, self.obj, self.outDict = spo.fmin_l_bfgs_b(self.calcObjGrad, x0=self.x0.copy(), bounds=[(0, None) for i in xrange(self.data.nBeamlets)], disp=5, )
+        start = time.time()
+        self.res = spo.minimize(self.calcObjGrad,x0=self.x0.copy(),method='L-BFGS-B', jac=True,bounds=[(0, None) for i in
+                                                                         xrange(self.data.nBeamlets)] ,options={'ftol':1e-6,'disp':5})
+        print 'solved in ',time.time()-start,' seconds'
+        self.fluence = self.res['x']
+        self.obj = self.res['fun']
 
     def calcDose(self, fluence):
         dose = np.zeros(self.data.nVox)
@@ -65,10 +76,11 @@ class imrt_model(object):
         io.savemat(self.data.workingDir + 'out.mat', {'obj': self.obj, 'fluence': self.fluence, 'dose': dose})
 
 
+
 #workingDir,dataDir = '','' # This is to run in current directory
-#workingDir,dataDir = 'Prostate6/','Prostate6/'# 6 beam case (data on github)
+workingDir,dataDir = 'Prostate6/','Prostate6/'# 6 beam case (data on github)
 #workingDir,dataDir = 'Prostate180/','/media/troy/datadrive/Data/DataProject/Prostate/data/'# 6 beam case
-workingDir, dataDir = 'HN394/', '/media/troy/datadrive/Data/DataProject/HN/Dij/NCP/'  # 6 beam case
+#workingDir, dataDir = 'HN394/', '/media/troy/datadrive/Data/DataProject/HN/Dij/NCP/'  # 6 beam case
 model = imrt_model(workingDir, dataDir)
 model.solve()
 model.outputDose()
