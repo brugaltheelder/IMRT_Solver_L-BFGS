@@ -66,7 +66,7 @@ class imrt_model(object):
 
 
 #workingDir,dataDir = '','' # This is to run in current directory
-#workingDir,dataDir = 'Prostate6/','Prostate6/'# 6 beam case
+#workingDir,dataDir = 'Prostate6/','Prostate6/'# 6 beam case (data on github)
 #workingDir,dataDir = 'Prostate180/','/media/troy/datadrive/Data/DataProject/Prostate/data/'# 6 beam case
 workingDir, dataDir = 'HN394/', '/media/troy/datadrive/Data/DataProject/HN/Dij/NCP/'  # 6 beam case
 model = imrt_model(workingDir, dataDir)
